@@ -12,6 +12,7 @@ function Votepage() {
     const { roomID } = useParams();
     const navigate = useNavigate();
     const [socket, setSocket] = useState(null);
+    const [map, setMap] = useState(null);
     const [isOwner, setIsOwner] = useState(null); // null, 'Y', 'N'
     const [isVotingInProgress, setIsVotingInProgress] = useState(null); // null, 'Y', 'N'
     const [referencePosition, setReferencePosition] = useState({});
@@ -20,6 +21,7 @@ function Votepage() {
     const [text, setText] = useState('');
     const [message, setMessage] = useState('');
     const [searchedPlaces, setSearchedPlaces] = useState([]);
+    const [circle, setCircle] = useState(null);
     const [radius, setRadius] = useState(500);
 
     useEffect(() => {
@@ -57,12 +59,29 @@ function Votepage() {
         const markerImage = new kakao.maps.MarkerImage(markerImgSrc, markerImgSize, markerImgOption);
 
         if (isOwner && isVotingInProgress && referencePosition.latitude && referencePosition.longitude) {
+
+            
             const mapElement = document.getElementById('votepage-map');
-            if (mapElement) {
-                const map = new kakao.maps.Map(mapElement, {
+            if (mapElement && !map && !circle) {
+                const newMap = new kakao.maps.Map(mapElement, {
                     center: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),
                     level: 3
                 });
+                const newCircle = new kakao.maps.Circle({
+                    center: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),
+                    radius: 500,
+                    strokeWeight: 1,
+                    strokeColor: '#75B8FA',
+                    strokeOpacity: 1,
+                    strokeStyle: 'solid',
+                    fillColor: '#CFE7FF',
+                    fillOpacity: 0.3,
+                });
+    
+                setCircle(newCircle);
+                setMap(newMap);
+            }
+            if (map && circle) {
                 const zoomControl = new kakao.maps.ZoomControl();
                 map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
@@ -71,27 +90,10 @@ function Votepage() {
                     image: markerImage,
                 });
                 marker.setMap(map);
-
-                // const circle = new kakao.maps.Circle({
-                //     center : new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),   
-                //     radius: radius, 
-                //     strokeWeight: 1, 
-                //     strokeColor: '#75B8FA', 
-                //     strokeOpacity: 1, 
-                //     strokeStyle: 'solid',
-                //     fillColor: '#CFE7FF',  
-                //     fillOpacity: 0.3,
-                // }); 
-                
-                // circle.setMap(map); 
-
-                // kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
-                //     // marker
-                //     marker.setPosition(mouseEvent.latLng);
-                // });
+                circle.setMap(map);
             }
         }
-    }, [isOwner, isVotingInProgress, referencePosition, radius]);
+    }, [isOwner, isVotingInProgress, referencePosition, map, circle]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -134,14 +136,17 @@ function Votepage() {
                     <div className='w-[400px] h-[400px]' id="votepage-map"></div>
                     <div>
                         <p>검색 반경 : {radius} m</p>
-                        <input 
-                            type="range" 
-                            name="radius" 
-                            defaultValue={radius} 
-                            min={100} 
-                            max={3000} 
+                        <input
+                            type="range"
+                            name="radius"
+                            defaultValue={radius}
+                            min={100}
+                            max={3000}
                             step={100}
-                            onChange={(event) => { setRadius(event.target.value) }}
+                            onChange={(event) => { 
+                                setRadius(event.target.value); 
+                                circle.setRadius(event.target.value);
+                            }}
                         />
                     </div>
                     <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll'>
