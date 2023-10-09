@@ -30,42 +30,59 @@ import kakaomapLogo from '../images/kakaomap_logo.png';
  */
 
 function MessageBox(props) {
-    const { chat } = props;
+    const { chat, name } = props;
 
-  return (
-    <div className='border border-black'>
-        {
-            chat.chatType === 'user-chat' &&
-            <div>
-                {chat.message}
-                {chat.username}
-            </div>
-        }
-        {
-            chat.chatType === 'system' &&
-            <div>
-                {chat.message}
-            </div>
-        }
-        {
-            chat.chatType === 'user-share' &&
-            <div>
-                {/* {chat.username}님이 {chat.placeName}을 공유했습니다. */}
-                <div>
-                    <div>{chat.placeAddress}</div>
-                    <div>{chat.placeCategory}</div>
-                    <div>{chat.placeDistance}</div>
-                    <div>
-                        <a href={chat.placeLink} target="_blank" rel="noopener noreferrer">
-                            <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
-                            카카오맵 링크
-                        </a>
+    return (
+        <>
+            {
+                // my chat
+                chat.chatType === 'user-chat' && name === chat.username &&
+                <div className='self-end w-[200px] break-words'>
+                    <p className='text-[gray] text-[14px]'>{chat.username}</p>
+                    <div className='border border-black'>
+                        <p>{chat.message}</p>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
-  )
+            }
+            {
+                // other's chat
+                chat.chatType === 'user-chat' && name !== chat.username &&
+                <div className='self-start w-[200px] break-words'>
+                    <p className='text-[gray] text-[14px]'>{chat.username}</p>
+                    <div className='border border-black'>
+                        <p>{chat.message}</p>
+                    </div>
+                </div>
+            }
+            {
+                // system message
+                chat.chatType === 'system' &&
+                <div className='self-center w-[300px] text-center break-words'>
+                    {chat.message}
+                </div>
+            }
+            {
+                // share
+                chat.chatType === 'user-share' &&
+                <div>
+                    <p className='text-[gray] text-[14px]'>{chat.username}</p>
+                    <div className='border border-black'>
+                        <div>
+                            <div>{chat.placeAddress}</div>
+                            <div>{chat.placeCategory}</div>
+                            <div>{chat.placeDistance}</div>
+                            <div>
+                                <a href={chat.placeLink} target="_blank" rel="noopener noreferrer">
+                                    <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
+                                    카카오맵 링크
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </>
+    )
 }
 
 export default MessageBox

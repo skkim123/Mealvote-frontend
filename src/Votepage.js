@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -17,6 +17,7 @@ function Votepage() {
     const [isOwner, setIsOwner] = useState(null); // null, 'Y', 'N'
     const [isVotingInProgress, setIsVotingInProgress] = useState(null); // null, 'Y', 'N'
     const [referencePosition, setReferencePosition] = useState({});
+    const [name,setName] = useState('');
 
     const ps = new kakao.maps.services.Places();
     const [text, setText] = useState('');
@@ -25,6 +26,8 @@ function Votepage() {
     const [searchedPlaces, setSearchedPlaces] = useState([]);
     const [circle, setCircle] = useState(null);
     const [radius, setRadius] = useState(500);
+
+    const chatsEndRef = useRef(null);
 
     useEffect(() => {
 
@@ -43,6 +46,7 @@ function Votepage() {
                         setIsVotingInProgress(res.data.votingInProgress);
                         setReferencePosition({ latitude: res.data.latitude, longitude: res.data.longitude });
                         setChats(res.data.chats);
+                        setName(res.data.name);
                     }
                 );
             } catch (error) {
@@ -112,6 +116,10 @@ function Votepage() {
         }
     }, [isOwner, isVotingInProgress, referencePosition, map, circle]);
 
+    useEffect(() => {
+        scrollToBottom();
+      }, [chats]);
+
     const handleSubmit = (event) => {
         event.preventDefault();
         ps.keywordSearch(text, placesSearchCallback, {
@@ -136,6 +144,10 @@ function Votepage() {
 
     const sharePlace = (place) => {
         socket.emit('userShare', place);
+    };
+
+    const scrollToBottom = () => {
+        chatsEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     return (
@@ -196,10 +208,11 @@ function Votepage() {
                         </div>
                     </div>
                     <div className='w-[400px]'>
-                        <div className='flex flex-col gap-y-[12px]'>
+                        <div className='flex flex-col gap-y-[12px] px-[20px] h-[400px] overflow-y-scroll border rounded-[8px] mt-[24px]'>
                             {
-                                chats.map((chat, idx) => <MessageBox key={idx} chat={chat} />)
+                                chats.map((chat, idx) => <MessageBox key={idx} chat={chat} name={name}/>)
                             }
+                            <div ref={chatsEndRef} />
                         </div>
                         <form onSubmit={sendMessage}>
                             <input
