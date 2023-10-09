@@ -94,7 +94,7 @@ function Votepage() {
             if (mapElement && !map && !circle) {
                 const newMap = new kakao.maps.Map(mapElement, {
                     center: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),
-                    level: 3
+                    level: 5
                 });
                 const newCircle = new kakao.maps.Circle({
                     center: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),

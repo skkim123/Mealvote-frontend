@@ -33,7 +33,7 @@ function Home() {
                 setLongitude(position.coords.longitude);
                 map = new kakao.maps.Map(document.getElementById('map'), {
                     center: new kakao.maps.LatLng(position.coords.latitude, position.coords.longitude),
-                    level: 3
+                    level: 5
                 });
                 const zoomControl = new kakao.maps.ZoomControl();
                 map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
