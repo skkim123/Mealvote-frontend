@@ -4,6 +4,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import markerImg from './images/marker.png';
 import kakaomapLogo from './images/kakaomap_logo.png';
+import MessageBox from './components/MessageBox';
 
 const { kakao } = window;
 
@@ -20,6 +21,7 @@ function Votepage() {
     const ps = new kakao.maps.services.Places();
     const [text, setText] = useState('');
     const [message, setMessage] = useState('');
+    const [chats, setChats] = useState([]);
     const [searchedPlaces, setSearchedPlaces] = useState([]);
     const [circle, setCircle] = useState(null);
     const [radius, setRadius] = useState(500);
@@ -29,7 +31,7 @@ function Votepage() {
         const newSocket = io.connect('http://localhost:5000', { withCredentials: true, query: { roomID } });
         setSocket(newSocket);
 
-        // inspect wheter there is a room with the given roomID
+        // inspect whether there is a room with the given roomID & fetch chats
         const checkRoomAndOwner = async () => {
             try {
                 await axios.get(`/rooms/check/${roomID}`, { withCredentials: true }).then(
@@ -40,6 +42,7 @@ function Votepage() {
                         setIsOwner(res.data.isOwner);
                         setIsVotingInProgress(res.data.votingInProgress);
                         setReferencePosition({ latitude: res.data.latitude, longitude: res.data.longitude });
+                        setChats(res.data.chats);
                     }
                 );
             } catch (error) {
@@ -53,6 +56,20 @@ function Votepage() {
     }, [roomID, navigate]);
 
     useEffect(() => {
+        if (socket) {
+            socket.on('userChat', (newChat) => {
+                setChats((chats) => [...chats, newChat]);
+            });
+            socket.on('system',(newChat)=>{
+                setChats((chats) => [...chats, newChat]);
+            });
+            socket.on('userShare',(newChat)=>{
+                setChats((chats) => [...chats, newChat]);
+            });
+        }
+    }, [socket]);
+
+    useEffect(() => {
         const markerImgSrc = markerImg;
         const markerImgSize = new kakao.maps.Size(60, 60);
         const markerImgOption = { offset: new kakao.maps.Point(12, 35) };
@@ -60,7 +77,7 @@ function Votepage() {
 
         if (isOwner && isVotingInProgress && referencePosition.latitude && referencePosition.longitude) {
 
-            
+
             const mapElement = document.getElementById('votepage-map');
             if (mapElement && !map && !circle) {
                 const newMap = new kakao.maps.Map(mapElement, {
@@ -77,7 +94,7 @@ function Votepage() {
                     fillColor: '#CFE7FF',
                     fillOpacity: 0.3,
                 });
-    
+
                 setCircle(newCircle);
                 setMap(newMap);
             }
@@ -102,26 +119,23 @@ function Votepage() {
             radius: radius,
             // sort: kakao.maps.services.SortBy.DISTANCE,
         });
-        console.log("text : ", text);
-
         setText('');
     };
 
     const placesSearchCallback = (data, status, pagination) => {
         if (status === kakao.maps.services.Status.OK) {
-            console.log(data);
             setSearchedPlaces(data);
         }
     };
 
     const sendMessage = (event) => {
         event.preventDefault();
-        if (socket) {
-            socket.emit('message', message);
-        } else {
-            console.log('socket is null');
-        }
+        socket.emit('userChat', message);
         setMessage('');
+    };
+
+    const sharePlace = (place) => {
+        socket.emit('userShare', place);
     };
 
     return (
@@ -143,8 +157,8 @@ function Votepage() {
                             min={100}
                             max={3000}
                             step={100}
-                            onChange={(event) => { 
-                                setRadius(event.target.value); 
+                            onChange={(event) => {
+                                setRadius(event.target.value);
                                 circle.setRadius(event.target.value);
                             }}
                         />
@@ -168,7 +182,7 @@ function Votepage() {
                                         <h2 className='font-bold'>
                                             {place.place_name}
                                         </h2>
-                                        <div>채팅창에 공유하기</div>
+                                        <button className='border border-black' onClick={()=>{sharePlace(place);}}>채팅창에 공유하기</button>
                                         <div>투표 목록에 넣기</div>
                                         <p>{place.category_name.split('>').slice(-1)[0]}</p>
                                         <p>키카오맵 링크 :
@@ -181,8 +195,12 @@ function Votepage() {
                             }
                         </div>
                     </div>
-                    <div>
-                        <div></div>
+                    <div className='w-[400px]'>
+                        <div className='flex flex-col gap-y-[12px]'>
+                            {
+                                chats.map((chat, idx) => <MessageBox key={idx} chat={chat} />)
+                            }
+                        </div>
                         <form onSubmit={sendMessage}>
                             <input
                                 type="text"
