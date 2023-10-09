@@ -68,8 +68,8 @@ function MessageBox(props) {
                     <div className='border border-black'>
                         <div>
                             <div>{chat.placeAddress}</div>
-                            <div>{chat.placeCategory}</div>
-                            <div>{chat.placeDistance}</div>
+                            <div>카테고리 : {chat.placeCategory}</div>
+                            <div>거리 : {chat.placeDistance} m</div>
                             <div>
                                 <a href={chat.placeURL} target="_blank" rel="noopener noreferrer">
                                     <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />

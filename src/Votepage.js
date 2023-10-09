@@ -190,6 +190,7 @@ function Votepage() {
                                 circle.setRadius(event.target.value);
                             }}
                         />
+                        {isOwner === 'Y' && <button className='border border-gray-400'>투표 시작</button>}
                     </div>
                     <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll'>
                         <form onSubmit={handleSubmit} className='border-b'>
@@ -201,7 +202,6 @@ function Votepage() {
                                 onChange={(event) => { setText(event.target.value) }}
                             />
                             <button type='submit' className='border'>검색하기 </button>
-                            {isOwner === 'Y' && <button>투표 시작</button>}
                         </form>
                         <div className='flex flex-col gap-y-[12px]'>
                             {
