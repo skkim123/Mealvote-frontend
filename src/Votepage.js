@@ -17,12 +17,13 @@ function Votepage() {
     const [isOwner, setIsOwner] = useState(null); // null, 'Y', 'N'
     const [isVotingInProgress, setIsVotingInProgress] = useState(null); // null, 'Y', 'N'
     const [referencePosition, setReferencePosition] = useState({});
-    const [name,setName] = useState('');
+    const [name, setName] = useState('');
 
     const ps = new kakao.maps.services.Places();
     const [text, setText] = useState('');
     const [message, setMessage] = useState('');
     const [chats, setChats] = useState([]);
+    const [candidates, setCandidates] = useState([]);
     const [searchedPlaces, setSearchedPlaces] = useState([]);
     const [circle, setCircle] = useState(null);
     const [radius, setRadius] = useState(500);
@@ -34,7 +35,7 @@ function Votepage() {
         const newSocket = io.connect('http://localhost:5000', { withCredentials: true, query: { roomID } });
         setSocket(newSocket);
 
-        // inspect whether there is a room with the given roomID & fetch chats
+        // inspect whether there is a room with the given roomID & fetch data
         const checkRoomAndOwner = async () => {
             try {
                 await axios.get(`/rooms/check/${roomID}`, { withCredentials: true }).then(
@@ -46,6 +47,7 @@ function Votepage() {
                         setIsVotingInProgress(res.data.votingInProgress);
                         setReferencePosition({ latitude: res.data.latitude, longitude: res.data.longitude });
                         setChats(res.data.chats);
+                        setCandidates(res.data.candidates);
                         setName(res.data.name);
                     }
                 );
@@ -64,11 +66,17 @@ function Votepage() {
             socket.on('userChat', (newChat) => {
                 setChats((chats) => [...chats, newChat]);
             });
-            socket.on('system',(newChat)=>{
+            socket.on('system', (newChat) => {
                 setChats((chats) => [...chats, newChat]);
             });
-            socket.on('userShare',(newChat)=>{
+            socket.on('userShare', (newChat) => {
                 setChats((chats) => [...chats, newChat]);
+            });
+            socket.on('addCandidate', (newCandidate) => {
+                setCandidates((candidates) => [...candidates, newCandidate]);
+            });
+            socket.on('deleteCandidate', (deletedCandidate) => {
+                setCandidates((candidates) => candidates.filter((candidate) => candidate.placeID !== deletedCandidate.placeID));
             });
         }
     }, [socket]);
@@ -118,7 +126,7 @@ function Votepage() {
 
     useEffect(() => {
         scrollToBottom();
-      }, [chats]);
+    }, [chats]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -144,6 +152,14 @@ function Votepage() {
 
     const sharePlace = (place) => {
         socket.emit('userShare', place);
+    };
+
+    const addCandidate = (place) => {
+        socket.emit('addCandidate', place);
+    };
+
+    const deleteCandidate = (candidate) => {
+        socket.emit('deleteCandidate', candidate);
     };
 
     const scrollToBottom = () => {
@@ -194,9 +210,9 @@ function Votepage() {
                                         <h2 className='font-bold'>
                                             {place.place_name}
                                         </h2>
-                                        <button className='border border-black' onClick={()=>{sharePlace(place);}}>채팅창에 공유하기</button>
-                                        <div>투표 목록에 넣기</div>
-                                        <p>{place.category_name.split('>').slice(-1)[0]}</p>
+                                        <button className='border border-black' onClick={() => { sharePlace(place); }}>채팅창에 공유하기</button>
+                                        <button className='border border-gray-400' onClick={() => { addCandidate(place); }}>투표 목록에 넣기</button>
+                                        <p>{place.category_name?.split('>').slice(-1)[0]}</p>
                                         <p>키카오맵 링크 :
                                             <a href={place.place_url} target="_blank" rel="noopener noreferrer">
                                                 <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
@@ -210,7 +226,7 @@ function Votepage() {
                     <div className='w-[400px]'>
                         <div className='flex flex-col gap-y-[12px] px-[20px] h-[400px] overflow-y-scroll border rounded-[8px] mt-[24px]'>
                             {
-                                chats.map((chat, idx) => <MessageBox key={idx} chat={chat} name={name}/>)
+                                chats.map((chat, idx) => <MessageBox key={idx} chat={chat} name={name} />)
                             }
                             <div ref={chatsEndRef} />
                         </div>
@@ -225,6 +241,17 @@ function Votepage() {
                             <button type='submit' className='border border-black'>보내기</button>
                         </form>
                     </div>
+                    <div className='w-[400px] border border-black h-[120px] overflow-y-scroll'>
+                        {
+                            candidates.map((candidate, idx) =>
+                                <div className='flex' key={idx}>
+                                    <p> {candidate.placeName}</p>
+                                    {isOwner === 'Y' && <button className='border border-gray-400' onClick={() => { deleteCandidate(candidate); }}>삭제하기</button>}
+                                </div>
+                            )
+                        }
+                    </div>
+
                 </div>
             }
         </>
