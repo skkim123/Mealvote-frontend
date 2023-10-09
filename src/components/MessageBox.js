@@ -24,11 +24,10 @@ import kakaomapLogo from '../images/kakaomap_logo.png';
     placeDistance: { // user-share
         type: Sequelize.FLOAT,
     },
-    placeLink: { // user-share
+    placeURL: { // user-share
         type: Sequelize.STRING(150),
     },
  */
-
 function MessageBox(props) {
     const { chat, name } = props;
 
@@ -72,7 +71,7 @@ function MessageBox(props) {
                             <div>{chat.placeCategory}</div>
                             <div>{chat.placeDistance}</div>
                             <div>
-                                <a href={chat.placeLink} target="_blank" rel="noopener noreferrer">
+                                <a href={chat.placeURL} target="_blank" rel="noopener noreferrer">
                                     <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
                                     카카오맵 링크
                                 </a>
