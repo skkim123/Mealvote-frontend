@@ -26,7 +26,9 @@ function Votepage() {
     const [candidates, setCandidates] = useState([]);
     const [searchedPlaces, setSearchedPlaces] = useState([]);
     const [circle, setCircle] = useState(null);
+    const [zoomControl, setZoomControl] = useState(null);
     const [radius, setRadius] = useState(500);
+    const [isVoteStartButtonClicked, setIsVoteStartButtonClicked] = useState(false);
 
     const chatsEndRef = useRef(null);
 
@@ -78,6 +80,9 @@ function Votepage() {
             socket.on('deleteCandidate', (deletedCandidate) => {
                 setCandidates((candidates) => candidates.filter((candidate) => candidate.placeID !== deletedCandidate.placeID));
             });
+            socket.on('voteStart', () => {
+                setIsVotingInProgress('Y');
+            });
         }
     }, [socket]);
 
@@ -88,10 +93,8 @@ function Votepage() {
         const markerImage = new kakao.maps.MarkerImage(markerImgSrc, markerImgSize, markerImgOption);
 
         if (isOwner && isVotingInProgress && referencePosition.latitude && referencePosition.longitude) {
-
-
             const mapElement = document.getElementById('votepage-map');
-            if (mapElement && !map && !circle) {
+            if (mapElement && !map && !circle && !zoomControl) {
                 const newMap = new kakao.maps.Map(mapElement, {
                     center: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),
                     level: 5
@@ -106,13 +109,14 @@ function Votepage() {
                     fillColor: '#CFE7FF',
                     fillOpacity: 0.3,
                 });
+                const newZoomControl = new kakao.maps.ZoomControl();
 
-                setCircle(newCircle);
                 setMap(newMap);
+                setCircle(newCircle);
+                setZoomControl(newZoomControl);
             }
-            if (map && circle) {
-                const zoomControl = new kakao.maps.ZoomControl();
-                map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+            if (map && circle && zoomControl) {
+                map.removeControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
                 const marker = new kakao.maps.Marker({
                     position: map.getCenter(),
@@ -120,9 +124,11 @@ function Votepage() {
                 });
                 marker.setMap(map);
                 circle.setMap(map);
+                map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
             }
         }
-    }, [isOwner, isVotingInProgress, referencePosition, map, circle]);
+    }, [isOwner, isVotingInProgress, referencePosition, map, circle, zoomControl]);
 
     useEffect(() => {
         scrollToBottom();
@@ -155,11 +161,24 @@ function Votepage() {
     };
 
     const addCandidate = (place) => {
-        socket.emit('addCandidate', place);
+        if (candidates.length >= 15) {
+            alert('투표 목록은 최대 15개까지만 가능합니다.');
+        } else {
+            socket.emit('addCandidate', place);
+        }
     };
 
     const deleteCandidate = (candidate) => {
         socket.emit('deleteCandidate', candidate);
+    };
+
+    const handleVoteStart = () => {
+        if (candidates.length < 2) {
+            alert('투표 목록은 최소 2개 이상이어야 합니다.');
+        } else {
+            setIsVoteStartButtonClicked(true);
+            socket.emit('voteStart');
+        }
     };
 
     const scrollToBottom = () => {
@@ -174,7 +193,7 @@ function Votepage() {
                 referencePosition.latitude &&
                 referencePosition.longitude &&
                 socket &&
-                <div>
+                <>
                     <div className='w-[400px] h-[400px]' id="votepage-map"></div>
                     <div>
                         <p>검색 반경 : {radius} m</p>
@@ -190,7 +209,17 @@ function Votepage() {
                                 circle.setRadius(event.target.value);
                             }}
                         />
-                        {isOwner === 'Y' && <button className='border border-gray-400'>투표 시작</button>}
+                        {
+                            isOwner === 'Y' &&
+                            isVotingInProgress === 'N' &&
+                            <button
+                                onClick={handleVoteStart}
+                                className='border border-gray-400'
+                                disabled={isVoteStartButtonClicked}
+                            >
+                                투표 시작
+                            </button>
+                        }
                     </div>
                     <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll'>
                         <form onSubmit={handleSubmit} className='border-b'>
@@ -252,7 +281,7 @@ function Votepage() {
                         }
                     </div>
 
-                </div>
+                </>
             }
         </>
     )
