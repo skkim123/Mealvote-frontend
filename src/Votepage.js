@@ -29,6 +29,7 @@ function Votepage() {
     const [zoomControl, setZoomControl] = useState(null);
     const [radius, setRadius] = useState(500);
     const [isVoteStartButtonClicked, setIsVoteStartButtonClicked] = useState(false);
+    const [isVoteButtonClicked,ssetIsVoteButtonClicked] = useState(false);
 
     const chatsEndRef = useRef(null);
 
@@ -181,6 +182,10 @@ function Votepage() {
         }
     };
 
+    const handleVote = () => {
+
+    };
+
     const scrollToBottom = () => {
         chatsEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -273,14 +278,28 @@ function Votepage() {
                     <div className='w-[400px] border border-black h-[120px] overflow-y-scroll'>
                         {
                             candidates.map((candidate, idx) =>
-                                <div className='flex' key={idx}>
+                                <div className='flex border-b' key={idx}>
                                     <p> {candidate.placeName}</p>
-                                    {isOwner === 'Y' && <button className='border border-gray-400' onClick={() => { deleteCandidate(candidate); }}>삭제하기</button>}
+                                    {
+                                        isOwner === 'Y' &&
+                                        isVotingInProgress === 'N' &&
+                                        <button
+                                            className='border border-gray-400'
+                                            onClick={() => { deleteCandidate(candidate); }}
+                                        >
+                                            삭제하기
+                                        </button>
+                                    }
+                                    {
+                                        isVotingInProgress === 'Y' &&
+                                        <div>
+                                            <button onClick={handleVote} className='border'>투표하기</button>
+                                        </div>
+                                    }
                                 </div>
                             )
                         }
                     </div>
-
                 </>
             }
         </>
