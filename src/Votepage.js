@@ -29,15 +29,12 @@ function Votepage() {
     const [zoomControl, setZoomControl] = useState(null);
     const [radius, setRadius] = useState(500);
     const [isVoteStartButtonClicked, setIsVoteStartButtonClicked] = useState(false);
-    const [isVoteButtonClicked,ssetIsVoteButtonClicked] = useState(false);
+    const [votedItemID, setVotedItemID] = useState(null);
+    const [voteCount, setVoteCount] = useState(0);
 
     const chatsEndRef = useRef(null);
 
     useEffect(() => {
-
-        const newSocket = io.connect('http://localhost:5000', { withCredentials: true, query: { roomID } });
-        setSocket(newSocket);
-
         // inspect whether there is a room with the given roomID & fetch data
         const checkRoomAndOwner = async () => {
             try {
@@ -52,8 +49,33 @@ function Votepage() {
                         setChats(res.data.chats);
                         setCandidates(res.data.candidates);
                         setName(res.data.name);
+                        setVoteCount(res.data.voteCount);
+
+                        const newSocket = io.connect('http://localhost:5000', { withCredentials: true, query: { roomID } });
+                        newSocket.on('userChat', (newChat) => {
+                            setChats((chats) => [...chats, newChat]);
+                        });
+                        newSocket.on('system', (newChat) => {
+                            setChats((chats) => [...chats, newChat]);
+                        });
+                        newSocket.on('userShare', (newChat) => {
+                            setChats((chats) => [...chats, newChat]);
+                        });
+                        newSocket.on('addCandidate', (newCandidate) => {
+                            setCandidates((candidates) => [...candidates, newCandidate]);
+                        });
+                        newSocket.on('deleteCandidate', (deletedCandidate) => {
+                            setCandidates((candidates) => candidates.filter((candidate) => candidate.placeID !== deletedCandidate.placeID));
+                        });
+                        newSocket.on('voteStart', () => {
+                            setIsVotingInProgress('Y');
+                        });
+                        newSocket.on('vote', (votes) => {
+                            setVoteCount(votes);
+                        });
+                        setSocket(newSocket);
                     }
-                );
+                    );
             } catch (error) {
                 console.log(error.response.data);
             }
@@ -61,31 +83,7 @@ function Votepage() {
 
         checkRoomAndOwner();
 
-        return () => { newSocket.close(); }
     }, [roomID, navigate]);
-
-    useEffect(() => {
-        if (socket) {
-            socket.on('userChat', (newChat) => {
-                setChats((chats) => [...chats, newChat]);
-            });
-            socket.on('system', (newChat) => {
-                setChats((chats) => [...chats, newChat]);
-            });
-            socket.on('userShare', (newChat) => {
-                setChats((chats) => [...chats, newChat]);
-            });
-            socket.on('addCandidate', (newCandidate) => {
-                setCandidates((candidates) => [...candidates, newCandidate]);
-            });
-            socket.on('deleteCandidate', (deletedCandidate) => {
-                setCandidates((candidates) => candidates.filter((candidate) => candidate.placeID !== deletedCandidate.placeID));
-            });
-            socket.on('voteStart', () => {
-                setIsVotingInProgress('Y');
-            });
-        }
-    }, [socket]);
 
     useEffect(() => {
         const markerImgSrc = markerImg;
@@ -182,8 +180,11 @@ function Votepage() {
         }
     };
 
-    const handleVote = () => {
-
+    const handleVote = (candidate) => {
+        if (candidate.placeID !== votedItemID) {
+            setVotedItemID(candidate.placeID);
+            socket.emit('vote', candidate);
+        }
     };
 
     const scrollToBottom = () => {
@@ -277,6 +278,10 @@ function Votepage() {
                     </div>
                     <div className='w-[400px] border border-black h-[120px] overflow-y-scroll'>
                         {
+                            isVotingInProgress === 'Y' &&
+                            <div> 총 투표 수 : {voteCount}</div>
+                        }
+                        {
                             candidates.map((candidate, idx) =>
                                 <div className='flex border-b' key={idx}>
                                     <p> {candidate.placeName}</p>
@@ -292,9 +297,23 @@ function Votepage() {
                                     }
                                     {
                                         isVotingInProgress === 'Y' &&
-                                        <div>
-                                            <button onClick={handleVote} className='border'>투표하기</button>
-                                        </div>
+                                        <>
+                                            {
+                                                votedItemID === candidate.placeID ?
+                                                    <button
+                                                        onClick={() => { handleVote(candidate); }}
+                                                        className='border bg-red-300'
+                                                    >
+                                                        투표하기
+                                                    </button> :
+                                                    <button
+                                                        onClick={() => { handleVote(candidate); }}
+                                                        className='border'
+                                                    >
+                                                        투표하기
+                                                    </button>
+                                            }
+                                        </>
                                     }
                                 </div>
                             )
