@@ -29,6 +29,7 @@ function Votepage() {
     const [zoomControl, setZoomControl] = useState(null);
     const [radius, setRadius] = useState(500);
     const [isVoteStartButtonClicked, setIsVoteStartButtonClicked] = useState(false);
+    const [isVoteFinishButtonClicked, setIsVoteFinishButtonClicked] = useState(false);
     const [votedItemID, setVotedItemID] = useState(null);
     const [voteCount, setVoteCount] = useState(0);
 
@@ -73,9 +74,14 @@ function Votepage() {
                         newSocket.on('vote', (votes) => {
                             setVoteCount(votes);
                         });
+                        newSocket.on('voteFinish', (candidate) => {
+                            navigate(`/voteresult/${roomID}`, { 
+                                replace: true, state: { placeName: candidate.placeName, placeID: candidate.placeID } 
+                            });
+                        });
                         setSocket(newSocket);
                     }
-                    );
+                );
             } catch (error) {
                 console.log(error.response.data);
             }
@@ -187,6 +193,15 @@ function Votepage() {
         }
     };
 
+    const handleVoteFinish = () => {
+        if (voteCount < 2) {
+            alert('투표를 종료하려면 최소 2명 이상의 투표가 필요합니다.')
+        } else {
+            setIsVoteFinishButtonClicked(true);
+            socket.emit('voteFinish');
+        }
+    };
+
     const scrollToBottom = () => {
         chatsEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -224,6 +239,17 @@ function Votepage() {
                                 disabled={isVoteStartButtonClicked}
                             >
                                 투표 시작
+                            </button>
+                        }
+                        {
+                            isOwner === 'Y' &&
+                            isVotingInProgress === 'Y' &&
+                            <button
+                                onClick={handleVoteFinish}
+                                className='border border-gray-400'
+                                disabled={isVoteFinishButtonClicked}
+                            >
+                                투표 종료
                             </button>
                         }
                     </div>

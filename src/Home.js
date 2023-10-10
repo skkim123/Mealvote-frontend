@@ -19,6 +19,8 @@ function Home() {
     useEffect(() => {
         if (location.state && location.state.redirect === 'votepage-no-room-id') {
             alert('There is no room with the given roomID');
+        } else if (location.state && location.state.redirect === 'unauthorized access') {
+            alert('unauthorized access');
         }
 
         const markerImgSrc = markerImg;
