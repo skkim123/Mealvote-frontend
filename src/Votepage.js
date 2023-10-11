@@ -75,9 +75,8 @@ function Votepage() {
                             setVoteCount(votes);
                         });
                         newSocket.on('voteFinish', (candidate) => {
-                            navigate(`/voteresult/${roomID}`, { 
-                                replace: true, state: { placeName: candidate.placeName, placeID: candidate.placeID } 
-                            });
+                            newSocket.disconnect();
+                            navigate(`/voteresult/${roomID}`, { replace: true, state: { selectedMenu: candidate } });
                         });
                         setSocket(newSocket);
                     }
@@ -130,7 +129,6 @@ function Votepage() {
                 marker.setMap(map);
                 circle.setMap(map);
                 map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-
             }
         }
     }, [isOwner, isVotingInProgress, referencePosition, map, circle, zoomControl]);
