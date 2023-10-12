@@ -18,9 +18,9 @@ function Home() {
 
     useEffect(() => {
         if (location.state && location.state.redirect === 'votepage-no-room-id') {
-            alert('There is no room with the given roomID');
+            alert('해당하는 방이 없습니다.');
         } else if (location.state && location.state.redirect === 'unauthorized access') {
-            alert('unauthorized access');
+            alert('허가되지 않은 접근입니다.');
         }
 
         const markerImgSrc = markerImg;
@@ -59,16 +59,14 @@ function Home() {
                 circle.setMap(map); 
 
                 kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
-                    // marker
                     marker.setPosition(mouseEvent.latLng);
                     setLatitude(mouseEvent.latLng.getLat());
                     setLongitude(mouseEvent.latLng.getLng());
-                    
                     circle.setPosition(mouseEvent.latLng);
                 });
             });
         } else { // geolocation is not supported
-            // ??????????????
+            console.log('geolocation is not supported');
         }
     }, [location.state]);
 
@@ -107,10 +105,6 @@ function Home() {
             map: map,
             position: new kakao.maps.LatLng(place.y, place.x)
         });
-
-        // kakao.maps.event.addListener(marker, 'click', () => {
-        //     console.log(place);
-        // });
     };
 
     return (
@@ -118,10 +112,6 @@ function Home() {
             <div className='w-[400px] h-[400px] my-[24px]' id="map"></div>
             <h1>메뉴를 정할 기준 위치를 지도에 클릭하세요. 키워드 검색 시 해당하는 장소에 핀이 꽂힙니다.</h1>
             <div>
-                {latitude}, {longitude}
-            </div>
-            <div>
-
                 <form onSubmit={handleSubmit}>
                     <input
                         className='border border-gray-400'
@@ -131,10 +121,8 @@ function Home() {
                     />
                     <button className='border border-gray-400' type="submit">검색</button>
                 </form>
-
-
             </div>
-            <button className='border border-gray-400' onClick={handleClick}>Create Room</button>
+            <button className='border border-gray-400' onClick={handleClick}>방 만들기</button>
         </div>
     )
 }

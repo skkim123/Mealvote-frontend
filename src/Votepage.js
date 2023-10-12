@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { serverURL } from './environment';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -6,7 +7,6 @@ import markerImgSrc from './images/marker.png';
 import kakaomapLogo from './images/kakaomap_logo.png';
 import markerSpriteImgSrc from './images/marker_sprite_images.png';
 import MessageBox from './components/MessageBox';
-
 
 const { kakao } = window;
 
@@ -53,7 +53,7 @@ function Votepage() {
                         setName(res.data.name);
                         setVoteCount(res.data.voteCount);
 
-                        const newSocket = io.connect('http://localhost:5000', { withCredentials: true, query: { roomID } });
+                        const newSocket = io.connect(serverURL, { withCredentials: true, query: { roomID } });
                         newSocket.on('userChat', (newChat) => {
                             setChats((chats) => [...chats, newChat]);
                         });
@@ -86,7 +86,6 @@ function Votepage() {
                 console.log(error.response.data);
             }
         };
-
         checkRoomAndOwner();
 
     }, [roomID, navigate]);
@@ -191,7 +190,7 @@ function Votepage() {
         ps.keywordSearch(text, placesSearchCallback, {
             location: new kakao.maps.LatLng(referencePosition.latitude, referencePosition.longitude),
             radius: radius,
-            // sort: kakao.maps.services.SortBy.DISTANCE,
+            category_group_code: 'FD6',
         });
         setText('');
     };
@@ -261,7 +260,6 @@ function Votepage() {
         if (searchedPlaceRef && searchedPlaceRef.current) {
             searchedPlaceRef.current.scrollTop = 27 + 176 * idx;
         }
-
     };
 
     return (
@@ -291,24 +289,12 @@ function Votepage() {
                         {
                             isOwner === 'Y' &&
                             isVotingInProgress === 'N' &&
-                            <button
-                                onClick={handleVoteStart}
-                                className='border border-gray-400'
-                                disabled={isVoteStartButtonClicked}
-                            >
-                                투표 시작
-                            </button>
+                            <button onClick={handleVoteStart} className='border border-gray-400' disabled={isVoteStartButtonClicked}> 투표 시작 </button>
                         }
                         {
                             isOwner === 'Y' &&
                             isVotingInProgress === 'Y' &&
-                            <button
-                                onClick={handleVoteFinish}
-                                className='border border-gray-400'
-                                disabled={isVoteFinishButtonClicked}
-                            >
-                                투표 종료
-                            </button>
+                            <button onClick={handleVoteFinish} className='border border-gray-400' disabled={isVoteFinishButtonClicked}> 투표 종료 </button>
                         }
                     </div>
                     <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll' ref={searchedPlaceRef}>
@@ -373,30 +359,15 @@ function Votepage() {
                                     {
                                         isOwner === 'Y' &&
                                         isVotingInProgress === 'N' &&
-                                        <button
-                                            className='border border-gray-400'
-                                            onClick={() => { deleteCandidate(candidate); }}
-                                        >
-                                            삭제하기
-                                        </button>
+                                        <button className='border border-gray-400' onClick={() => { deleteCandidate(candidate); }}> 삭제하기 </button>
                                     }
                                     {
                                         isVotingInProgress === 'Y' &&
                                         <>
                                             {
                                                 votedItemID === candidate.placeID ?
-                                                    <button
-                                                        onClick={() => { handleVote(candidate); }}
-                                                        className='border bg-red-300'
-                                                    >
-                                                        투표하기
-                                                    </button> :
-                                                    <button
-                                                        onClick={() => { handleVote(candidate); }}
-                                                        className='border'
-                                                    >
-                                                        투표하기
-                                                    </button>
+                                                    <button onClick={() => { handleVote(candidate); }} className='border bg-red-300'> 투표하기 </button> :
+                                                    <button onClick={() => { handleVote(candidate); }} className='border'> 투표하기 </button>
                                             }
                                         </>
                                     }
