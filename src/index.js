@@ -4,10 +4,10 @@ import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import axios from 'axios';
-import { serverURL } from './environment';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-axios.defaults.baseURL = serverURL;
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+axios.defaults.baseURL = API_URL;
 
 root.render(
   <BrowserRouter>

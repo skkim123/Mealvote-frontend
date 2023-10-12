@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { serverURL } from './environment';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -9,6 +8,7 @@ import markerSpriteImgSrc from './images/marker_sprite_images.png';
 import MessageBox from './components/MessageBox';
 
 const { kakao } = window;
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function Votepage() {
     const { roomID } = useParams();
@@ -53,7 +53,7 @@ function Votepage() {
                         setName(res.data.name);
                         setVoteCount(res.data.voteCount);
 
-                        const newSocket = io.connect(serverURL, { withCredentials: true, query: { roomID } });
+                        const newSocket = io.connect(API_URL, { withCredentials: true, query: { roomID } });
                         newSocket.on('userChat', (newChat) => {
                             setChats((chats) => [...chats, newChat]);
                         });
