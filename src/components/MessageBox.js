@@ -36,7 +36,7 @@ function MessageBox(props) {
             {
                 // my chat
                 chat.chatType === 'user-chat' && name === chat.username &&
-                <div className='self-end w-[200px] break-words'>
+                <div className='self-end w-[200px] break-words mb-[16px]'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
                     <div className='border border-black'>
                         <p>{chat.message}</p>
@@ -46,7 +46,7 @@ function MessageBox(props) {
             {
                 // other's chat
                 chat.chatType === 'user-chat' && name !== chat.username &&
-                <div className='self-start w-[200px] break-words'>
+                <div className='self-start w-[200px] break-words mb-[16px]'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
                     <div className='border border-black'>
                         <p>{chat.message}</p>
@@ -56,14 +56,14 @@ function MessageBox(props) {
             {
                 // system message
                 chat.chatType === 'system' &&
-                <div className='self-center w-[300px] text-center break-words'>
+                <div className='self-center w-[300px] text-center break-words mb-[16px]'>
                     {chat.message}
                 </div>
             }
             {
                 // share
                 chat.chatType === 'user-share' &&
-                <div>
+                <div className='mb-[16px]'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
                     <div className='border border-black'>
                         <div>

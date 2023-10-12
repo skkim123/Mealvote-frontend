@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import markerImg from './images/marker.png';
+import markerImgSrc from './images/marker.png';
 import kakaomapLogo from './images/kakaomap_logo.png';
+import markerSpriteImgSrc from './images/marker_sprite_images.png';
 import MessageBox from './components/MessageBox';
+
 
 const { kakao } = window;
 
 function Votepage() {
-
     const { roomID } = useParams();
     const navigate = useNavigate();
     const [socket, setSocket] = useState(null);
@@ -18,8 +19,6 @@ function Votepage() {
     const [isVotingInProgress, setIsVotingInProgress] = useState(null); // null, 'Y', 'N'
     const [referencePosition, setReferencePosition] = useState({});
     const [name, setName] = useState('');
-
-    const ps = new kakao.maps.services.Places();
     const [text, setText] = useState('');
     const [message, setMessage] = useState('');
     const [chats, setChats] = useState([]);
@@ -33,7 +32,9 @@ function Votepage() {
     const [votedItemID, setVotedItemID] = useState(null);
     const [voteCount, setVoteCount] = useState(0);
 
-    const chatsEndRef = useRef(null);
+    const ps = new kakao.maps.services.Places();
+    const chatRef = useRef(null);
+    const searchedPlaceRef = useRef(null);
 
     useEffect(() => {
         // inspect whether there is a room with the given roomID & fetch data
@@ -91,7 +92,6 @@ function Votepage() {
     }, [roomID, navigate]);
 
     useEffect(() => {
-        const markerImgSrc = markerImg;
         const markerImgSize = new kakao.maps.Size(60, 60);
         const markerImgOption = { offset: new kakao.maps.Point(12, 35) };
         const markerImage = new kakao.maps.MarkerImage(markerImgSrc, markerImgSize, markerImgOption);
@@ -134,6 +134,55 @@ function Votepage() {
     }, [isOwner, isVotingInProgress, referencePosition, map, circle, zoomControl]);
 
     useEffect(() => {
+        const spriteMarkers = [];
+        const bounds = new kakao.maps.LatLngBounds();
+        const infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+
+        if (map && searchedPlaces.length > 0) {
+            searchedPlaces.forEach((place, index) => {
+                const placePosition = new kakao.maps.LatLng(place.y, place.x);
+                const markerSpriteImgSize = new kakao.maps.Size(36, 37);
+                const markerSpriteImgOption = {
+                    spriteSize: new kakao.maps.Size(36, 691),
+                    spriteOrigin: new kakao.maps.Point(0, (index * 46) + 10),
+                    offset: new kakao.maps.Point(13, 37),
+                };
+                const markerSpriteImg = new kakao.maps.MarkerImage(markerSpriteImgSrc, markerSpriteImgSize, markerSpriteImgOption);
+                const spriteMarker = new kakao.maps.Marker({
+                    position: placePosition,
+                    image: markerSpriteImg,
+                });
+                spriteMarker.setMap(map);
+                spriteMarkers.push(spriteMarker);
+
+                bounds.extend(placePosition);
+
+                kakao.maps.event.addListener(spriteMarker, 'click', function () {
+                    scrollToSearchedPlace(index);
+                });
+
+                kakao.maps.event.addListener(spriteMarker, 'mouseover', function () {
+                    infowindow.setContent(place.place_name);
+                    infowindow.open(map, spriteMarker);
+                });
+
+                kakao.maps.event.addListener(spriteMarker, 'mouseout', function () {
+                    infowindow.close();
+                });
+            });
+            map.setBounds(bounds);
+        }
+
+        return () => {
+            if (map) {
+                spriteMarkers.forEach((spriteMarker) => {
+                    spriteMarker.setMap(null);
+                });
+            }
+        };
+    }, [map, searchedPlaces]);
+
+    useEffect(() => {
         scrollToBottom();
     }, [chats]);
 
@@ -147,7 +196,7 @@ function Votepage() {
         setText('');
     };
 
-    const placesSearchCallback = (data, status, pagination) => {
+    const placesSearchCallback = (data, status) => {
         if (status === kakao.maps.services.Status.OK) {
             setSearchedPlaces(data);
         }
@@ -201,7 +250,18 @@ function Votepage() {
     };
 
     const scrollToBottom = () => {
-        chatsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (chatRef && chatRef.current) {
+            if (chatRef.current.scrollHeight > chatRef.current.clientHeight || chatRef.current.scrollWidth > chatRef.current.clientWidth) {
+                chatRef.current.scrollTop = chatRef.current.scrollHeight;
+            }
+        }
+    };
+
+    const scrollToSearchedPlace = (idx) => {
+        if (searchedPlaceRef && searchedPlaceRef.current) {
+            searchedPlaceRef.current.scrollTop = 27 + 176 * idx;
+        }
+
     };
 
     return (
@@ -251,7 +311,7 @@ function Votepage() {
                             </button>
                         }
                     </div>
-                    <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll'>
+                    <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll' ref={searchedPlaceRef}>
                         <form onSubmit={handleSubmit} className='border-b'>
                             <input
                                 type="text"
@@ -265,29 +325,30 @@ function Votepage() {
                         <div className='flex flex-col gap-y-[12px]'>
                             {
                                 searchedPlaces.map((place, idx) =>
-                                    <div key={idx} className='flex flex-col'>
-                                        <h2 className='font-bold'>
-                                            {place.place_name}
-                                        </h2>
-                                        <button className='border border-black' onClick={() => { sharePlace(place); }}>채팅창에 공유하기</button>
-                                        <button className='border border-gray-400' onClick={() => { addCandidate(place); }}>투표 목록에 넣기</button>
-                                        <p>{place.category_name?.split('>').slice(-1)[0]}</p>
-                                        <p>키카오맵 링크 :
-                                            <a href={place.place_url} target="_blank" rel="noopener noreferrer">
-                                                <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
-                                            </a>
-                                        </p>
-                                    </div>
+                                    <>
+                                        <div key={idx} className='flex flex-col'>
+                                            <h2 className='font-bold'>
+                                                {place.place_name}
+                                            </h2>
+                                            <button className='border border-black' onClick={() => { sharePlace(place); }}>채팅창에 공유하기</button>
+                                            <button className='border border-gray-400' onClick={() => { addCandidate(place); }}>투표 목록에 넣기</button>
+                                            <p>{place.category_name?.split('>').slice(-1)[0]}</p>
+                                            <p>키카오맵 링크 :
+                                                <a href={place.place_url} target="_blank" rel="noopener noreferrer">
+                                                    <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </>
                                 )
                             }
                         </div>
                     </div>
                     <div className='w-[400px]'>
-                        <div className='flex flex-col gap-y-[12px] px-[20px] h-[400px] overflow-y-scroll border rounded-[8px] mt-[24px]'>
+                        <div className='flex flex-col px-[20px] h-[400px] overflow-y-scroll border rounded-[8px] mt-[24px]' ref={chatRef} >
                             {
                                 chats.map((chat, idx) => <MessageBox key={idx} chat={chat} name={name} />)
                             }
-                            <div ref={chatsEndRef} />
                         </div>
                         <form onSubmit={sendMessage}>
                             <input
