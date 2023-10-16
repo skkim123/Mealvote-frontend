@@ -52,16 +52,19 @@ function VoteResult() {
     }, [selectedMenu, map, zoomControl]);
 
     return (
-        <div>
-            <h1>투표 결과</h1>
-            <h2>가장 많은 득표를 받은 메뉴는 {selectedMenu.placeName} 입니다.</h2>
-            <div className='w-[400px] h-[400px]' id="voteresult-map"></div>
-            <div>
-                <p>키카오맵 링크 :
-                    <a href={selectedMenu.placeURL} >
-                        <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
-                    </a>
-                </p>
+        <div className='w-[360px]'>
+            <h1 className='font-bold text-[24px]'>투표 결과</h1>
+            <div className='flex flex-col items-center mt-[8px]'>
+                <h2>가장 많은 득표를 받은 메뉴는</h2>
+                <h2 className='font-semibold text-[18px] my-[8px]'>{selectedMenu.placeName}</h2>
+                <h2>입니다.</h2>
+            </div>
+            <div className='w-[360px] h-[360px] mt-[24px]' id="voteresult-map"></div>
+            <div className='mt-[24px]'>
+                <a href={selectedMenu.placeURL} target="_blank" rel="noopener noreferrer" className='flex items-center'>
+                    <p>카카오맵 링크 :</p>
+                    <img className='w-[40px] h-[40px] ml-[8px]' src={kakaomapLogo} alt="logo" />
+                </a>
             </div>
         </div>
     )

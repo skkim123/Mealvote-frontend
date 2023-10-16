@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+* {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.mealvote {
+    font-family: 'Lato', sans-serif;
+}

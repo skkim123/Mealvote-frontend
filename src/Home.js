@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import markerImg from './images/marker.png';
+import './index.css'
 
 const { kakao } = window;
 let map = null;
@@ -45,24 +46,11 @@ function Home() {
                     image: markerImage,
                 });
                 marker.setMap(map);
-                const circle = new kakao.maps.Circle({
-                    center : new kakao.maps.LatLng(position.coords.latitude, position.coords.longitude),   
-                    radius: 500, 
-                    strokeWeight: 1, 
-                    strokeColor: '#75B8FA', 
-                    strokeOpacity: 1, 
-                    strokeStyle: 'solid',
-                    fillColor: '#CFE7FF',  
-                    fillOpacity: 0.3,
-                }); 
-                
-                circle.setMap(map); 
 
                 kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
                     marker.setPosition(mouseEvent.latLng);
                     setLatitude(mouseEvent.latLng.getLat());
                     setLongitude(mouseEvent.latLng.getLng());
-                    circle.setPosition(mouseEvent.latLng);
                 });
             });
         } else { // geolocation is not supported
@@ -108,21 +96,28 @@ function Home() {
     };
 
     return (
-        <div>
-            <div className='w-[400px] h-[400px] my-[24px]' id="map"></div>
-            <h1>메뉴를 정할 기준 위치를 지도에 클릭하세요. 키워드 검색 시 해당하는 장소에 핀이 꽂힙니다.</h1>
-            <div>
+        <div className='w-[360px] flex flex-col items-center'>
+            <div className='mealvote font-bold text-[48px] mb-[24px]'>Mealvote</div>
+            <div className='w-[360px] h-[360px] shadow' id="map"></div>
+            <button
+                className='border border-gray-400 mt-[32px] w-[180px] h-[48px] rounded-[4px] shadow bg-indigo-600 text-white hover:bg-indigo-500'
+                onClick={handleClick}
+            >
+                현재 위치로 방 만들기
+            </button>
+            <h1 className='mt-[32px]'>현재 위치가 아닌 다른 곳을 기준으로 잡고 싶다면 </h1>
+            <h1 className='mt-[8px]'> 키워드 검색으로 원하는 위치를 찾아보세요.</h1>
+            <div className='mt-[12px]'>
                 <form onSubmit={handleSubmit}>
                     <input
-                        className='border border-gray-400'
+                        className='border border-gray-400 w-[250px] h-[40px] pl-[8px] rounded-[4px]'
                         type="text"
                         value={text}
                         onChange={(event) => { setText(event.target.value) }}
                     />
-                    <button className='border border-gray-400' type="submit">검색</button>
+                    <button className='border border-gray-400 ml-[16px] w-[80px] h-[40px] rounded-[4px] shadow' type="submit">검색</button>
                 </form>
             </div>
-            <button className='border border-gray-400' onClick={handleClick}>방 만들기</button>
         </div>
     )
 }

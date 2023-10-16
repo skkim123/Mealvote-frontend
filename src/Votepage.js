@@ -258,8 +258,13 @@ function Votepage() {
 
     const scrollToSearchedPlace = (idx) => {
         if (searchedPlaceRef && searchedPlaceRef.current) {
-            searchedPlaceRef.current.scrollTop = 27 + 176 * idx;
+            searchedPlaceRef.current.scrollIntoView({ behavior: 'instant' });
+            searchedPlaceRef.current.scrollTop = 209 * idx;
         }
+    };
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
     };
 
     return (
@@ -270,104 +275,132 @@ function Votepage() {
                 referencePosition.latitude &&
                 referencePosition.longitude &&
                 socket &&
-                <>
-                    <div className='w-[400px] h-[400px]' id="votepage-map"></div>
-                    <div>
-                        <p>검색 반경 : {radius} m</p>
-                        <input
-                            type="range"
-                            name="radius"
-                            defaultValue={radius}
-                            min={100}
-                            max={3000}
-                            step={100}
-                            onChange={(event) => {
-                                setRadius(event.target.value);
-                                circle.setRadius(event.target.value);
-                            }}
-                        />
+                <div className='w-[360px]'>
+                    <div className='w-[360px] h-[360px] shadow' id="votepage-map"></div>
+                    <div className='flex mt-[16px] items-center'>
+                        <div className='ml-[24px]'>
+                            <p>검색 반경 : {radius} m</p>
+                            <input
+                                type="range"
+                                name="radius"
+                                defaultValue={radius}
+                                min={100}
+                                max={3000}
+                                step={100}
+                                onChange={(event) => {
+                                    setRadius(event.target.value);
+                                    circle.setRadius(event.target.value);
+                                }}
+                            />
+                        </div>
+                        <button 
+                            onClick={()=>{copyToClipboard(`https://mealvote.net/votepage/${roomID}`)}}
+                            className='border border-gray-400 ml-[20px] w-[78px] text-[14px] rounded-[4px] shadow hover:bg-gray-200 py-[4px]'
+                        >
+                            채팅방 주소 복사하기
+                        </button>
                         {
                             isOwner === 'Y' &&
                             isVotingInProgress === 'N' &&
-                            <button onClick={handleVoteStart} className='border border-gray-400' disabled={isVoteStartButtonClicked}> 투표 시작 </button>
+                            <button
+                                onClick={handleVoteStart}
+                                className='border border-gray-400 ml-[20px] w-[100px] h-[40px] rounded-[4px] shadow bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-gray-500'
+                                disabled={isVoteStartButtonClicked}
+                            >
+                                투표 시작
+                            </button>
                         }
                         {
                             isOwner === 'Y' &&
                             isVotingInProgress === 'Y' &&
-                            <button onClick={handleVoteFinish} className='border border-gray-400' disabled={isVoteFinishButtonClicked}> 투표 종료 </button>
+                            <button
+                                onClick={handleVoteFinish}
+                                className='border border-gray-400 ml-[20px] w-[100px] h-[40px] rounded-[4px] shadow bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-gray-500'
+                                disabled={isVoteFinishButtonClicked}
+                            >
+                                투표 종료
+                            </button>
                         }
                     </div>
-                    <div className='border-black border-2 w-[400px] h-[300px] overflow-y-scroll' ref={searchedPlaceRef}>
-                        <form onSubmit={handleSubmit} className='border-b'>
-                            <input
-                                type="text"
-                                value={text}
-                                className='border'
-                                placeholder='맛집'
-                                onChange={(event) => { setText(event.target.value) }}
-                            />
-                            <button type='submit' className='border'>검색하기 </button>
-                        </form>
-                        <div className='flex flex-col gap-y-[12px]'>
-                            {
-                                searchedPlaces.map((place, idx) =>
-                                    <>
-                                        <div key={idx} className='flex flex-col'>
-                                            <h2 className='font-bold'>
-                                                {place.place_name}
-                                            </h2>
-                                            <button className='border border-black' onClick={() => { sharePlace(place); }}>채팅창에 공유하기</button>
-                                            <button className='border border-gray-400' onClick={() => { addCandidate(place); }}>투표 목록에 넣기</button>
-                                            <p>{place.category_name?.split('>').slice(-1)[0]}</p>
-                                            <p>키카오맵 링크 :
-                                                <a href={place.place_url} target="_blank" rel="noopener noreferrer">
-                                                    <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
-                                                </a>
-                                            </p>
-                                        </div>
-                                    </>
-                                )
-                            }
-                        </div>
-                    </div>
-                    <div className='w-[400px]'>
-                        <div className='flex flex-col px-[20px] h-[400px] overflow-y-scroll border rounded-[8px] mt-[24px]' ref={chatRef} >
+                    <div className='w-[360px]'>
+                        <div className='flex flex-col px-[20px] h-[250px] overflow-y-scroll border rounded-[8px] mt-[16px] shadow' ref={chatRef} >
                             {
                                 chats.map((chat, idx) => <MessageBox key={idx} chat={chat} name={name} />)
                             }
                         </div>
-                        <form onSubmit={sendMessage}>
+                        <div>
+                            <form onSubmit={sendMessage} className='mt-[8px]'>
+                                <input
+                                    type="text"
+                                    className='border border-gray-400 px-[4px] py-[2px] w-[260px] rounded-[4px]'
+                                    value={message}
+                                    name="message"
+                                    onChange={(event) => { setMessage(event.target.value) }}
+                                />
+                                <button type='submit' className='border border-gray-400 ml-[16px] bg-blue-500 text-white rounded-[4px] w-[80px] h-[32px]'>보내기</button>
+                            </form>
+                        </div>
+                    </div>
+                    <hr className='mt-[32px]' />
+                    <p className='mt-[32px] font-semibold text-[18px]'>주변 식당 키워드로 검색 <span className='font-normal text-[16px]'>ex.죽전동 맛집</span></p>
+                    <div className='shadow mt-[8px]'>
+                        <form onSubmit={handleSubmit} className='flex justify-between h-[40px]'>
                             <input
                                 type="text"
-                                className='border border-black'
-                                value={message}
-                                name="message"
-                                onChange={(event) => { setMessage(event.target.value) }}
+                                value={text}
+                                className='border w-[270px] px-[4px] py-[2px]'
+                                placeholder='맛집'
+                                onChange={(event) => { setText(event.target.value) }}
                             />
-                            <button type='submit' className='border border-black'>보내기</button>
+                            <button type='submit' className='border w-[120px]'>검색하기</button>
                         </form>
+                        <div className='border w-[360px] h-[300px] overflow-y-scroll' ref={searchedPlaceRef}>
+                            <div className='flex flex-col gap-y-[12px]'>
+                                {
+                                    searchedPlaces.map((place, idx) =>
+                                        <>
+                                            <div key={idx} className='flex flex-col border-b pb-[12px] pl-[12px]'>
+                                                <h2 className='font-bold'>
+                                                    {idx + 1}. {place.place_name}
+                                                </h2>
+                                                <button className='border w-[144px] h-[40px] self-center rounded-[4px] mt-[8px]' onClick={() => { sharePlace(place); }}>채팅창에 공유하기</button>
+                                                <button className='border w-[144px] h-[40px] self-center rounded-[4px] mt-[8px]' onClick={() => { addCandidate(place); }}>투표 후보로 넣기</button>
+                                                <p>{place.category_name?.split('>').slice(-1)[0]}</p>
+                                                <div>
+                                                    <a href={place.place_url} target="_blank" rel="noopener noreferrer" className='flex items-center'>
+                                                        <p>카카오맵 링크 :</p>
+                                                        <img className='w-[40px] h-[40px] ml-[8px]' src={kakaomapLogo} alt="logo" />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )
+                                }
+                            </div>
+                        </div>
                     </div>
-                    <div className='w-[400px] border border-black h-[120px] overflow-y-scroll'>
+                    <p className='mt-[20px] font-semibold text-[18px]'>후보 목록</p>
+                    <div className='w-[360px] border shadow rounded-[4px] h-[120px] overflow-y-scroll mt-[8px]'>
                         {
                             isVotingInProgress === 'Y' &&
-                            <div> 총 투표 수 : {voteCount}</div>
+                            <div> 투표한 사람 수 : {voteCount}</div>
                         }
                         {
                             candidates.map((candidate, idx) =>
-                                <div className='flex border-b' key={idx}>
-                                    <p> {candidate.placeName}</p>
+                                <div className='flex border-b h-[40px] items-center' key={idx}>
+                                    <p className='mx-[8px]'> {candidate.placeName}</p>
                                     {
                                         isOwner === 'Y' &&
                                         isVotingInProgress === 'N' &&
-                                        <button className='border border-gray-400' onClick={() => { deleteCandidate(candidate); }}> 삭제하기 </button>
+                                        <button className='text-white text-[14px] bg-red-500 hover:bg-red-600 rounded-[4px] w-[64px] h-[24px] shadow' onClick={() => { deleteCandidate(candidate); }}>삭제하기</button>
                                     }
                                     {
                                         isVotingInProgress === 'Y' &&
                                         <>
                                             {
                                                 votedItemID === candidate.placeID ?
-                                                    <button onClick={() => { handleVote(candidate); }} className='border bg-red-300'> 투표하기 </button> :
-                                                    <button onClick={() => { handleVote(candidate); }} className='border'> 투표하기 </button>
+                                                    <button onClick={() => { handleVote(candidate); }} className='text-white text-[14px] bg-gray-500 rounded-[4px] w-[64px] h-[24px] shadow'>투표하기</button> :
+                                                    <button onClick={() => { handleVote(candidate); }} className='text-white text-[14px] bg-blue-500 hover:bg-blue-600 rounded-[4px] w-[64px] h-[24px] shadow'>투표하기</button>
                                             }
                                         </>
                                     }
@@ -375,7 +408,7 @@ function Votepage() {
                             )
                         }
                     </div>
-                </>
+                </div>
             }
         </>
     )

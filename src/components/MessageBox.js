@@ -1,36 +1,8 @@
 import React from 'react'
 import kakaomapLogo from '../images/kakaomap_logo.png';
 
-/**
-    chatType: {
-        type: Sequelize.ENUM('user-chat', 'system', 'user-share'),
-        allowNull: false,
-    },
-    username: { // user-chat, user-share
-        type: Sequelize.STRING(50),
-    },
-    message: { // user-chat, system
-        type: Sequelize.TEXT,
-    },
-    placeName: { // user-share
-        type: Sequelize.STRING(50),
-    },
-    placeAddress: { // user-share
-        type: Sequelize.STRING(100),
-    },
-    placeCategory: { // user-share
-        type: Sequelize.STRING(50),
-    },
-    placeDistance: { // user-share
-        type: Sequelize.FLOAT,
-    },
-    placeURL: { // user-share
-        type: Sequelize.STRING(150),
-    },
- */
 function MessageBox(props) {
     const { chat, name } = props;
-
     return (
         <>
             {
@@ -38,7 +10,7 @@ function MessageBox(props) {
                 chat.chatType === 'user-chat' && name === chat.username &&
                 <div className='self-end w-[200px] break-words mb-[16px]'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
-                    <div className='border border-black'>
+                    <div className='border border-black rounded-[4px] shadow p-[4px]'>
                         <p>{chat.message}</p>
                     </div>
                 </div>
@@ -46,9 +18,9 @@ function MessageBox(props) {
             {
                 // other's chat
                 chat.chatType === 'user-chat' && name !== chat.username &&
-                <div className='self-start w-[200px] break-words mb-[16px]'>
+                <div className='self-start w-[200px] break-words mb-[16px] rounded-[4px] shadow'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
-                    <div className='border border-black'>
+                    <div className='border border-black rounded-[4px] shadow p-[4px]'>
                         <p>{chat.message}</p>
                     </div>
                 </div>
@@ -65,15 +37,15 @@ function MessageBox(props) {
                 chat.chatType === 'user-share' &&
                 <div className='mb-[16px]'>
                     <p className='text-[gray] text-[14px]'>{chat.username}</p>
-                    <div className='border border-black'>
+                    <div className='border border-black rounded-[8px] shadow p-[4px]'>
                         <div>
                             <div>{chat.placeAddress}</div>
                             <div>카테고리 : {chat.placeCategory}</div>
                             <div>거리 : {chat.placeDistance} m</div>
                             <div>
-                                <a href={chat.placeURL} target="_blank" rel="noopener noreferrer">
-                                    <img className='w-[40px] h-[40px]' src={kakaomapLogo} alt="logo" />
-                                    카카오맵 링크
+                                <a href={chat.placeURL} target="_blank" rel="noopener noreferrer" className='flex items-center'>
+                                    <p>카카오맵 링크 :</p>
+                                    <img className='w-[40px] h-[40px] ml-[8px] mb-[4px]' src={kakaomapLogo} alt="logo"/>
                                 </a>
                             </div>
                         </div>
