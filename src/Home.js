@@ -99,6 +99,7 @@ function Home() {
         <div className='w-[360px] flex flex-col items-center'>
             <div className='mealvote font-bold text-[48px] mb-[24px]'>Mealvote</div>
             <div className='w-[360px] h-[360px] shadow' id="map"></div>
+            <p className='text-[14px] self-start'>지도가 나오지 않는다면 위치 정보 접근을 허용해주세요.</p>
             <button
                 className='border border-gray-400 mt-[32px] w-[180px] h-[48px] rounded-[4px] shadow bg-indigo-600 text-white hover:bg-indigo-500'
                 onClick={handleClick}
