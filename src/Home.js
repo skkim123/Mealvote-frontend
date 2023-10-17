@@ -6,8 +6,8 @@ import './index.css'
 
 const { kakao } = window;
 let map = null;
-const DEFAULT_LATITUDE = 37;
-const DEFAULT_LONGITUDE = 127;
+const DEFAULT_LATITUDE = 37.498601;
+const DEFAULT_LONGITUDE = 127.028575;
 
 function Home() {
 
